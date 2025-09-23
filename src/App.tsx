@@ -191,7 +191,7 @@ function App() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 h-[calc(100vh-160px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 min-h-[calc(100vh-160px)]">
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             {/* Upload Section */}
@@ -374,7 +374,7 @@ function App() {
                             <div className={`px-4 py-3 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
                               message.sender === 'user'
                                 ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-900 hover:bg-gray-50'
+                                : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
                             }`}>
                               <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                             </div>
@@ -385,14 +385,14 @@ function App() {
                     {isLoading && (
                       <div className="flex justify-start animate-in slide-in-from-bottom-4 fade-in duration-300">
                         <div className="flex space-x-3 max-w-3xl">
-                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm border border-gray-200">
                             <Bot className="w-4 h-4 text-gray-600" />
                           </div>
                           <div className="flex flex-col items-start">
                             <div className="flex items-center space-x-2 mb-1">
                               <span className="text-sm font-medium text-gray-900">AI Assistant</span>
                             </div>
-                            <div className="px-4 py-3 rounded-2xl bg-gray-100 shadow-sm">
+                            <div className="px-4 py-3 rounded-2xl bg-white shadow-sm border border-gray-200">
                               <div className="flex items-center space-x-2">
                                 <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
                                 <span className="text-sm text-gray-600">Thinking...</span>

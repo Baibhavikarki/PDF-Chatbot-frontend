@@ -1,5 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Upload, Send, MessageCircle, Bot, User, FileText, Loader2, Settings, Zap, Database, ChevronDown } from 'lucide-react'
+import {
+  Upload,
+  Send,
+  MessageCircle,
+  Bot,
+  User,
+  FileText,
+  Loader2,
+  Settings,
+  Zap,
+  Database,
+  ChevronDown,
+} from 'lucide-react'
 
 interface Message {
   id: string
@@ -25,6 +37,7 @@ function App() {
   const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
+  const [isDragOver, setIsDragOver] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -39,7 +52,8 @@ function App() {
   useEffect(() => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current
-      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
+      const isNearBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100
 
       if (isNearBottom) {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -51,7 +65,8 @@ function App() {
   const handleScroll = useCallback(() => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current
-      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
+      const isNearBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100
       setShowScrollButton(!isNearBottom && messages.length > 0)
     }
   }, [messages.length])
@@ -61,13 +76,53 @@ function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [])
 
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // Only set to false if we're leaving the drop zone entirely
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false)
+    }
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+
+    const files = Array.from(e.dataTransfer.files)
+    const pdfFile = files.find((file) => file.type === 'application/pdf')
+
+    if (pdfFile) {
+      setSelectedFile(pdfFile)
+      if (fileInputRef.current) {
+        // Create a new FileList-like object for the input
+        const dt = new DataTransfer()
+        dt.items.add(pdfFile)
+        fileInputRef.current.files = dt.files
+      }
+    }
+  }, [])
+
   const checkServerStatus = async () => {
     try {
       const response = await fetch(`${API_BASE}/status`)
       const data = await response.json()
       setServerStatus(data)
-    } catch (error) {
-      console.error('Failed to check server status:', error)
+    } catch (_error) {
+      // Failed to check server status - silently handle error
     }
   }
 
@@ -81,7 +136,7 @@ function App() {
     try {
       const response = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
-        body: formData
+        body: formData,
       })
 
       if (response.ok) {
@@ -94,7 +149,7 @@ function App() {
         const error = await response.json()
         addMessage(`Upload failed: ${error.error}`, 'bot')
       }
-    } catch (error) {
+    } catch (_error) {
       addMessage('Failed to upload file. Please check your connection.', 'bot')
     } finally {
       setIsUploading(false)
@@ -106,9 +161,9 @@ function App() {
       id: Date.now().toString(),
       content,
       sender,
-      timestamp: new Date()
+      timestamp: new Date(),
     }
-    setMessages(prev => [...prev, newMessage])
+    setMessages((prev) => [...prev, newMessage])
   }
 
   const handleSendMessage = async () => {
@@ -123,9 +178,9 @@ function App() {
       const response = await fetch(`${API_BASE}/ask`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ question: userMessage })
+        body: JSON.stringify({ question: userMessage }),
       })
 
       const data = await response.json()
@@ -135,7 +190,7 @@ function App() {
       } else {
         addMessage(`Error: ${data.error}`, 'bot')
       }
-    } catch (error) {
+    } catch (_error) {
       addMessage('Failed to get response. Please check your connection.', 'bot')
     } finally {
       setIsLoading(false)
@@ -168,11 +223,15 @@ function App() {
               {serverStatus && (
                 <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${serverStatus.apiKeys.openai ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <div
+                      className={`w-2 h-2 rounded-full ${serverStatus.apiKeys.openai ? 'bg-green-500' : 'bg-red-500'}`}
+                    ></div>
                     <span className="text-sm font-medium text-gray-700">OpenAI</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${serverStatus.vectorStoreLoaded ? 'bg-green-500' : 'bg-amber-500'}`}></div>
+                    <div
+                      className={`w-2 h-2 rounded-full ${serverStatus.vectorStoreLoaded ? 'bg-green-500' : 'bg-amber-500'}`}
+                    ></div>
                     <span className="text-sm font-medium text-gray-700">
                       {serverStatus.vectorStoreLoaded ? 'Ready' : 'No Docs'}
                     </span>
@@ -195,12 +254,26 @@ function App() {
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             {/* Upload Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div
+              className={`bg-white rounded-xl shadow-sm border-2 transition-all duration-200 p-6 ${
+                isDragOver ? 'border-blue-500 border-dashed bg-blue-50' : 'border-gray-200'
+              }`}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
               <div className="flex items-center space-x-2 mb-4">
                 <Upload className="w-5 h-5 text-blue-600" />
                 <h2 className="text-lg font-semibold text-gray-900">Upload Document</h2>
               </div>
               <div className="space-y-4">
+                {isDragOver && (
+                  <div className="text-center py-4">
+                    <Upload className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                    <p className="text-blue-600 font-medium">Drop PDF file here</p>
+                  </div>
+                )}
                 <div className="relative">
                   <input
                     ref={fileInputRef}
@@ -210,6 +283,45 @@ function App() {
                     onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                   />
                 </div>
+                {!isDragOver && !selectedFile && (
+                  <div className="text-center text-sm text-gray-500">
+                    <p>Or drag and drop a PDF file here</p>
+                  </div>
+                )}
+                {selectedFile && (
+                  <div className="flex items-center space-x-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-blue-900 truncate">
+                        {selectedFile.name}
+                      </p>
+                      <p className="text-xs text-blue-600">
+                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedFile(null)
+                        if (fileInputRef.current) fileInputRef.current.value = ''
+                      }}
+                      className="text-blue-400 hover:text-blue-600 transition-colors"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                )}
                 <button
                   onClick={handleFileUpload}
                   disabled={!selectedFile || isUploading}
@@ -246,21 +358,25 @@ function App() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-600">OpenAI API</span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      serverStatus.apiKeys.openai
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        serverStatus.apiKeys.openai
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
                       {serverStatus.apiKeys.openai ? 'Connected' : 'Error'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-600">Documents</span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      serverStatus.vectorStoreLoaded
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-amber-100 text-amber-800'
-                    }`}>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        serverStatus.vectorStoreLoaded
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-amber-100 text-amber-800'
+                      }`}
+                    >
                       {serverStatus.vectorStoreLoaded ? 'Ready' : 'Empty'}
                     </span>
                   </div>
@@ -287,19 +403,27 @@ function App() {
               </div>
               <div className="space-y-3">
                 <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white text-xs font-semibold rounded-full flex items-center justify-center">1</div>
+                  <div className="w-6 h-6 bg-blue-600 text-white text-xs font-semibold rounded-full flex items-center justify-center">
+                    1
+                  </div>
                   <p className="text-sm text-gray-700">Upload a PDF document</p>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white text-xs font-semibold rounded-full flex items-center justify-center">2</div>
+                  <div className="w-6 h-6 bg-blue-600 text-white text-xs font-semibold rounded-full flex items-center justify-center">
+                    2
+                  </div>
                   <p className="text-sm text-gray-700">Wait for processing to complete</p>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white text-xs font-semibold rounded-full flex items-center justify-center">3</div>
+                  <div className="w-6 h-6 bg-blue-600 text-white text-xs font-semibold rounded-full flex items-center justify-center">
+                    3
+                  </div>
                   <p className="text-sm text-gray-700">Ask questions about the content</p>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white text-xs font-semibold rounded-full flex items-center justify-center">4</div>
+                  <div className="w-6 h-6 bg-blue-600 text-white text-xs font-semibold rounded-full flex items-center justify-center">
+                    4
+                  </div>
                   <p className="text-sm text-gray-700">Get AI-powered answers!</p>
                 </div>
               </div>
@@ -331,7 +455,7 @@ function App() {
                 className="flex-1 overflow-y-auto p-6 relative"
                 style={{
                   scrollBehavior: 'smooth',
-                  overscrollBehavior: 'contain'
+                  overscrollBehavior: 'contain',
                 }}
               >
                 {messages.length === 0 ? (
@@ -339,8 +463,13 @@ function App() {
                     <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                       <Bot className="w-10 h-10 text-gray-400" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Welcome to Document AI!</h3>
-                    <p className="text-gray-500 max-w-md">Upload a PDF document and start asking questions about its content. I'll help you understand and analyze your documents.</p>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      Welcome to Document AI!
+                    </h3>
+                    <p className="text-gray-500 max-w-md">
+                      Upload a PDF document and start asking questions about its content. I'll help
+                      you understand and analyze your documents.
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-6 min-h-full">
@@ -350,19 +479,25 @@ function App() {
                         className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-4 fade-in duration-300`}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <div className={`flex space-x-3 max-w-3xl ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
-                            message.sender === 'user'
-                              ? 'bg-blue-600 shadow-md'
-                              : 'bg-gray-100 shadow-sm'
-                          }`}>
+                        <div
+                          className={`flex space-x-3 max-w-3xl ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}
+                        >
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
+                              message.sender === 'user'
+                                ? 'bg-blue-600 shadow-md'
+                                : 'bg-gray-100 shadow-sm'
+                            }`}
+                          >
                             {message.sender === 'user' ? (
                               <User className="w-4 h-4 text-white" />
                             ) : (
                               <Bot className="w-4 h-4 text-gray-600" />
                             )}
                           </div>
-                          <div className={`flex flex-col ${message.sender === 'user' ? 'items-end' : 'items-start'}`}>
+                          <div
+                            className={`flex flex-col ${message.sender === 'user' ? 'items-end' : 'items-start'}`}
+                          >
                             <div className="flex items-center space-x-2 mb-1">
                               <span className="text-sm font-medium text-gray-900">
                                 {message.sender === 'user' ? 'You' : 'AI Assistant'}
@@ -371,12 +506,16 @@ function App() {
                                 {message.timestamp.toLocaleTimeString()}
                               </span>
                             </div>
-                            <div className={`px-4 py-3 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
-                              message.sender === 'user'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
-                            }`}>
-                              <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                            <div
+                              className={`px-4 py-3 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
+                                message.sender === 'user'
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'
+                              }`}
+                            >
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                                {message.content}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -390,16 +529,27 @@ function App() {
                           </div>
                           <div className="flex flex-col items-start">
                             <div className="flex items-center space-x-2 mb-1">
-                              <span className="text-sm font-medium text-gray-900">AI Assistant</span>
+                              <span className="text-sm font-medium text-gray-900">
+                                AI Assistant
+                              </span>
                             </div>
                             <div className="px-4 py-3 rounded-2xl bg-white shadow-sm border border-gray-200">
                               <div className="flex items-center space-x-2">
                                 <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
                                 <span className="text-sm text-gray-600">Thinking...</span>
                                 <div className="flex space-x-1">
-                                  <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                                  <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                                  <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                  <div
+                                    className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"
+                                    style={{ animationDelay: '0ms' }}
+                                  ></div>
+                                  <div
+                                    className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"
+                                    style={{ animationDelay: '150ms' }}
+                                  ></div>
+                                  <div
+                                    className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"
+                                    style={{ animationDelay: '300ms' }}
+                                  ></div>
                                 </div>
                               </div>
                             </div>
@@ -454,7 +604,9 @@ function App() {
                 {!serverStatus?.vectorStoreLoaded && (
                   <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center space-x-3">
                     <FileText className="w-5 h-5 text-amber-600" />
-                    <span className="text-sm text-amber-800">Please upload a PDF document to start chatting!</span>
+                    <span className="text-sm text-amber-800">
+                      Please upload a PDF document to start chatting!
+                    </span>
                   </div>
                 )}
               </div>

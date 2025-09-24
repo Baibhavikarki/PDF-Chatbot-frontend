@@ -1,73 +1,79 @@
-# React + TypeScript + Vite
+# Document AI - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React + TypeScript web application for document-based AI chat functionality with drag-and-drop PDF upload.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 📄 **PDF Upload**: Drag-and-drop or click to upload PDF documents
+- 💬 **AI Chat**: Ask questions about uploaded documents using RAG (Retrieval-Augmented Generation)
+- 🎨 **Modern UI**: Clean, responsive design with Tailwind CSS
+- ⚡ **Fast**: Built with Vite for optimal development experience
+- 🔧 **Type Safe**: Full TypeScript support with strict linting
 
-## React Compiler
+## Quick Start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Development
 
-## Expanding the ESLint configuration
+```bash
+# Install dependencies
+npm install
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The app will be available at `http://localhost:5173`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Build for Production
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# Build the application
+npm run build
+
+# Preview the build
+npm run preview
 ```
+
+## Development Scripts
+
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build for production
+- `npm run lint` - Run ESLint with error reporting
+- `npm run lint:fix` - Fix auto-fixable ESLint issues
+- `npm run format` - Format code with Prettier
+- `npm run format:check` - Check if code is formatted correctly
+
+## Project Structure
+
+```
+src/
+├── App.tsx          # Main application component
+├── main.tsx         # Application entry point
+└── index.css        # Global styles (Tailwind imports)
+```
+
+## Customization
+
+### Homepage Content
+Edit `src/App.tsx` to modify:
+- Upload section styling and behavior
+- Chat interface and message display
+- Server status indicators
+- Quick start guide content
+
+### Styling
+- Uses Tailwind CSS for styling
+- Global styles in `src/index.css`
+- Component styles are inline with Tailwind classes
+
+### Backend Integration
+The frontend connects to a backend server at `http://127.0.0.1:3001`. Make sure the backend server is running for full functionality.
+
+## Technologies
+
+- **React 19** - Modern React with latest features
+- **TypeScript** - Type safety and better developer experience
+- **Vite** - Fast build tool and dev server
+- **Tailwind CSS** - Utility-first CSS framework
+- **Lucide React** - Beautiful icon library
+- **ESLint + Prettier** - Code quality and formatting
